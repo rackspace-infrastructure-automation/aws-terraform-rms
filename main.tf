@@ -13,7 +13,7 @@ resource "aws_cloudformation_stack" "rms_stack" {
     AvailabilityZoneCount         = "${var.AvailabilityZoneCount}"
     AlertLogicDataCenter          = "US"
     VPCCIDR                       = "${var.VPCCIDR}"
-    ThreatManagerBuildState       = "Deploy"
+    ThreatManagerBuildState       = "${var.build_state}"
     ThreatManagerVolumeSize       = "50"
     Environment                   = "${var.environment}"
     KeyName                       = "${var.KeyName}"

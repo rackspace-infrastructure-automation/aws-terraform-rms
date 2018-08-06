@@ -22,6 +22,11 @@ variable "Environment" {
   type = "string"
 }
 
+variable "build_state" {
+  type    = "string"
+  default = "Deploy"
+}
+
 variable "KeyName" {
   type = "string"
 }
