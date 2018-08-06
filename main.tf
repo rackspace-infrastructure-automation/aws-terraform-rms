@@ -3,16 +3,26 @@ resource "random_string" "AlertLogicExternalId" {
   special = false
 }
 
+data "aws_canonical_user_id" "current" {}
+
+data "aws_subnet" "selected" {
+  id = "${element(var.Subnets, 0)}"
+}
+
+data "aws_vpc" "selected" {
+  id = "${data.aws_subnet.selected.vpc_id}"
+}
+
 resource "aws_cloudformation_stack" "rms_stack" {
   name = "rms-stack"
 
   parameters {
     Subnets                       = "${join(",", var.Subnets)}"
-    VPCID                         = "${var.VPCID}"
-    CloudTrailLogBucket           = "${var.CloudTrailLogBucket}"
+    VPCID                         = "${data.aws_subnet.selected.vpc_id}"
+    CloudTrailLogBucket           = "${data.aws_canonical_user_id.current.display_name}-logs"
     AvailabilityZoneCount         = "${var.AvailabilityZoneCount}"
     AlertLogicDataCenter          = "US"
-    VPCCIDR                       = "${var.VPCCIDR}"
+    VPCCIDR                       = "${data.aws_vpc.selected.cidr_block}"
     ThreatManagerBuildState       = "${var.build_state}"
     ThreatManagerVolumeSize       = "50"
     Environment                   = "${var.environment}"

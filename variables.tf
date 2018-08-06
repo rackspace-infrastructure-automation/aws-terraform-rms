@@ -2,19 +2,7 @@ variable "Subnets" {
   type = "list"
 }
 
-variable "VPCID" {
-  type = "string"
-}
-
-variable "CloudTrailLogBucket" {
-  type = "string"
-}
-
 variable "AvailabilityZoneCount" {
-  type = "string"
-}
-
-variable "VPCCIDR" {
   type = "string"
 }
 
