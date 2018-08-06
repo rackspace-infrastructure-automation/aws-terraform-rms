@@ -6,17 +6,19 @@ provider "aws" {
 module "vpc" {
   source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork//"
 
-  vpc_name = "Test1VPC"
+  vpc_name = "RMS-Test-VPC"
 }
 
 module "test_rms" {
   source = "../../module"
 
-  Subnets                       = "${module.vpc.private_subnets}"
-  AvailabilityZoneCount         = "2"
-  Environment                   = "Production"
-  build_state                   = "Test"
-  KeyName                       = "CircleCI"
-  InstanceRoleManagedPolicyArns = ""
-  ThreatManagerInstanceType     = "c4.large"
+  # Required parameters
+  name                    = "Test-RMS"
+  subnets                 = "${module.vpc.private_subnets}"
+  alert_logic_customer_id = "123456789"
+  build_state             = "Test"
+}
+
+output "RMS_Deployment_Info" {
+  value = "${module.test_rms.deployment_details}"
 }
