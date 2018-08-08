@@ -1,0 +1,21 @@
+{
+  "Statement": [
+    {"Action": ["cloudformation:Describe*"],
+      "Resource": "*", "Effect": "Allow"},
+    {"Action": ["ssm:CreateAssociation",
+          "ssm:DescribeInstanceInformation"],
+      "Resource": "*", "Effect": "Allow"},
+    {"Action": ["cloudwatch:PutMetricData",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
+          "logs:CreateLogStream",
+          "ec2:DescribeTags",
+          "logs:DescribeLogStreams",
+          "logs:CreateLogGroup",
+          "logs:PutLogEvents",
+          "ssm:GetParameter"],
+      "Resource": "*", "Effect": "Allow"},
+    {"Action": ["ec2:DescribeTags"],
+      "Resource": "*", "Effect": "Allow"}
+  ]
+}
