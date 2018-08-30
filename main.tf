@@ -1,3 +1,25 @@
+/**
+ * # aws-terraform-rms
+ *
+ * This module deploys the required infrastructure for an RMS managed Alert Logic deployment.  This includes Alert Logic Threat Manager appliances in each AZ of the VPC, and required IAM roles to allow for Alert Logic scanning inventory scanning and log ingestion.
+ *
+ *
+ *## Basic Usage
+ *
+ *```
+ *module "rms_main" {
+ *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.0.1"
+ *
+ *  name    = "Test-RMS"
+ *  subnets = "${module.vpc.private_subnets}"
+ *
+ *  alert_logic_customer_id = "123456789"
+ *}
+ *```
+ *
+ * Full working references are available at [examples](examples)
+ */
+
 provider "aws" {
   region = "us-west-2"
   alias  = "rms_oregon"
@@ -29,8 +51,21 @@ locals {
     "rackspace:automation:ssmaudit" = "False"
   }
 
-  rs_alarm_topic       = "arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rackspace-support-emergency"
+  rs_alarm_topic       = ["arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rackspace-support-emergency"]
   cloudtrail_sns_topic = "arn:aws:sns:us-west-2:${data.aws_caller_identity.current.account_id}:rackspace-trail"
+
+  alarm_sns_notification = "${compact(list(var.notification_topic))}"
+  rs_alarm_option        = "${var.rackspace_managed ? "managed" : "unmanaged"}"
+
+  rs_alarm_action = {
+    managed   = "${local.rs_alarm_topic}"
+    unmanaged = "${local.alarm_sns_notification}"
+  }
+
+  rs_ok_action = {
+    managed   = "${local.rs_alarm_topic}"
+    unmanaged = []
+  }
 
   alert_logic_details = {
     US = {
@@ -357,8 +392,8 @@ resource "aws_cloudwatch_metric_alarm" "status_check_failed_system_alarm_ticket"
   evaluation_periods  = "10"
   period              = "60"
   metric_name         = "StatusCheckFailed_System"
-  alarm_actions       = ["${local.rs_alarm_topic}"]
-  ok_actions          = ["${local.rs_alarm_topic}"]
+  alarm_actions       = ["${local.rs_alarm_action[local.rs_alarm_option]}"]
+  ok_actions          = ["${local.rs_ok_action[local.rs_alarm_option]}"]
 
   dimensions {
     InstanceId = "${element(aws_instance.threat_manager.*.id, count.index)}"
@@ -377,8 +412,8 @@ resource "aws_cloudwatch_metric_alarm" "status_check_failed_instance_alarm_ticke
   evaluation_periods  = "10"
   period              = "60"
   metric_name         = "StatusCheckFailed_Instance"
-  ok_actions          = ["${local.rs_alarm_topic}"]
-  alarm_actions       = ["${local.rs_alarm_topic}"]
+  ok_actions          = ["${local.rs_ok_action[local.rs_alarm_option]}"]
+  alarm_actions       = ["${local.rs_alarm_action[local.rs_alarm_option]}"]
 
   dimensions {
     InstanceId = "${element(aws_instance.threat_manager.*.id, count.index)}"

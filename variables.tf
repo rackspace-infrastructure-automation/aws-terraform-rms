@@ -45,6 +45,18 @@ variable "name" {
   type        = "string"
 }
 
+variable "notification_topic" {
+  description = "SNS Topic ARN to use for customer notifications from CloudWatch alarms. (OPTIONAL)"
+  type        = "string"
+  default     = ""
+}
+
+variable "rackspace_managed" {
+  description = "Boolean parameter controlling if instance will be fully managed by Rackspace support teams, created CloudWatch alarms that generate tickets, and utilize Rackspace managed SSM documents."
+  type        = "string"
+  default     = true
+}
+
 variable "subnets" {
   description = "Private Subnet IDs for deployment. This is for the ALTM appliances."
   type        = "list"
