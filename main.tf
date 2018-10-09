@@ -231,7 +231,7 @@ module "logging_role" {
 
   policy_vars = {
     cloudtrail_bucket = "${data.aws_canonical_user_id.current.display_name}-logs"
-    sqs_queue_arn     = "arn:aws:sqs:us-west-2:794790922771:rms-stack-ALSQSQueue-130WSCL28TCBR"
+    sqs_queue_arn     = "${element(concat(aws_sqs_queue.altm_queue.*.arn, list("")),0)}"
   }
 }
 
