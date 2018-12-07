@@ -7,7 +7,7 @@ This module deploys the required infrastructure for an RMS managed Alert Logic d
 
 ```
 module "rms_main" {
- source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.0.1"
+ source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.2"
 
  name    = "Test-RMS"
  subnets = "${module.vpc.private_subnets}"

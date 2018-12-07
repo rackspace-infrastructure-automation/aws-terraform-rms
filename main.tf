@@ -8,7 +8,7 @@
  *
  *```
  *module "rms_main" {
- *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.0.1"
+ *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.2"
  *
  *  name    = "Test-RMS"
  *  subnets = "${module.vpc.private_subnets}"
@@ -29,7 +29,11 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
-data "aws_canonical_user_id" "current" {}
+data "aws_canonical_user_id" "current" {
+  # Explicitly setting this call to the us-west-2 region due to existing terraform bug
+  # at https://github.com/terraform-providers/terraform-provider-aws/issues/6762
+  provider = "aws.rms_oregon"
+}
 
 data "aws_subnet" "selected" {
   id = "${element(var.subnets, 0)}"
