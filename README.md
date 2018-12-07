@@ -7,7 +7,7 @@ This module deploys the required infrastructure for an RMS managed Alert Logic d
 
 ```
 module "rms_main" {
- source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.2"
+ source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.3"
 
  name    = "Test-RMS"
  subnets = "${module.vpc.private_subnets}"
@@ -27,6 +27,7 @@ Full working references are available at [examples](examples)
 | alert_logic_data_center | Alert Logic Data Center where logs will be shipped. | string | `US` | no |
 | az_count | Number of Availability Zones. For environments where only Log ingestion is required, please select 0 | string | `2` | no |
 | build_state | Allowed values 'Deploy' or 'Test'.  Select 'Deploy' unless the stack is being built for testing in an account without access to the Alert Logic AMIs. | string | `Deploy` | no |
+| cloudtrail_bucket | The desired cloudtrail log bucket to monitor.  In most cases, the correct bucket will be determined via the canonical user id display name, but if a nonstand value is used, or a custom bucket name is needed, the full bucket name can be provided here. | string | `` | no |
 | environment | Application environment for which this infrastructure is being created. e.g. Development/Production. | string | `Production` | no |
 | instance_type | The instance type to use for the Alert Logic appliances.  Defaults to c5.large | string | `c5.large` | no |
 | key_pair | Name of an existing EC2 KeyPair to enable SSH access to the instances. | string | `` | no |
