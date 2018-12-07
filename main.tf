@@ -8,7 +8,7 @@
  *
  *```
  *module "rms_main" {
- *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.2"
+ *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.3"
  *
  *  name    = "Test-RMS"
  *  subnets = "${module.vpc.private_subnets}"
@@ -234,8 +234,12 @@ module "logging_role" {
   policy_file        = "${"${path.module}/iam_policies/logging_role_policy.json"}"
 
   policy_vars = {
-    cloudtrail_bucket = "${data.aws_canonical_user_id.current.display_name}-logs"
-    sqs_queue_arn     = "${element(concat(aws_sqs_queue.altm_queue.*.arn, list("")),0)}"
+    cloudtrail_bucket = "${var.cloudtrail_bucket != "" ?
+                           var.cloudtrail_bucket :
+                           "${data.aws_canonical_user_id.current.display_name}-logs"
+                         }"
+
+    sqs_queue_arn = "${element(concat(aws_sqs_queue.altm_queue.*.arn, list("")),0)}"
   }
 }
 
