@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 module "vpc" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork//"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork?ref=master"
 
   vpc_name = "RMS-Test-VPC"
 }
@@ -26,12 +26,4 @@ module "test_rms_no_customer_id" {
   name        = "Test-RMS2"
   subnets     = "${module.vpc.private_subnets}"
   build_state = "Test"
-}
-
-output "RMS_Deployment_Info" {
-  value = "${module.test_rms.deployment_details}"
-}
-
-output "RMS_Deployment_Info_No_Customer_ID" {
-  value = "${module.test_rms_no_customer_id.deployment_details}"
 }

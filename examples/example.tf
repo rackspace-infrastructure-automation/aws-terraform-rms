@@ -68,11 +68,3 @@ module "rms_dr" {
   # tags = {}
   # volume_size = 50
 }
-
-output "RMS_Deployment_Info" {
-  value = "${module.rms_main.deployment_details}"
-}
-
-output "RMS_DR_Deployment_Info" {
-  value = "${module.rms_dr.deployment_details}"
-}
