@@ -6,7 +6,7 @@ This module deploys the required infrastructure for an RMS managed Alert Logic d
 
 ```
 module "rms_main" {
- source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.3"
+ source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.4"
 
  name    = "Test-RMS"
  subnets = "${module.vpc.private_subnets}"
@@ -30,7 +30,7 @@ Full working references are available at [examples](examples)
 | instance\_type | The instance type to use for the Alert Logic appliances.  Defaults to c5.large | string | `"c5.large"` | no |
 | key\_pair | Name of an existing EC2 KeyPair to enable SSH access to the instances. | string | `""` | no |
 | name | The name prefix to use for the resources created in this module. | string | n/a | yes |
-| notification\_topic | SNS Topic ARN to use for customer notifications from CloudWatch alarms. (OPTIONAL) | string | `""` | no |
+| notification\_topic | List of SNS Topic ARNs to use for customer notifications from CloudWatch alarms. (OPTIONAL) | list | `<list>` | no |
 | rackspace\_managed | Boolean parameter controlling if instance will be fully managed by Rackspace support teams, created CloudWatch alarms that generate tickets, and utilize Rackspace managed SSM documents. | string | `"true"` | no |
 | subnets | Private Subnet IDs for deployment. This is for the ALTM appliances. | list | n/a | yes |
 | tags | Custom tags to apply to all resources. | map | `<map>` | no |
