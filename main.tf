@@ -8,7 +8,7 @@
  *
  *```
  *module "rms_main" {
- *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.3"
+ *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.4"
  *
  *  name    = "Test-RMS"
  *  subnets = "${module.vpc.private_subnets}"
@@ -55,21 +55,7 @@ locals {
     "rackspace:automation:ssmaudit" = "False"
   }
 
-  rs_alarm_topic       = ["arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:rackspace-support-emergency"]
   cloudtrail_sns_topic = "arn:aws:sns:us-west-2:${data.aws_caller_identity.current.account_id}:rackspace-trail"
-
-  alarm_sns_notification = "${compact(list(var.notification_topic))}"
-  rs_alarm_option        = "${var.rackspace_managed ? "managed" : "unmanaged"}"
-
-  rs_alarm_action = {
-    managed   = "${local.rs_alarm_topic}"
-    unmanaged = "${local.alarm_sns_notification}"
-  }
-
-  rs_ok_action = {
-    managed   = "${local.rs_alarm_topic}"
-    unmanaged = []
-  }
 
   alert_logic_details = {
     US = {
@@ -388,80 +374,87 @@ resource "aws_instance" "threat_manager" {
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "status_check_failed_system_alarm_ticket" {
-  count               = "${var.az_count}"
-  alarm_name          = "${join("-", list(var.name, "SystemRecoveryNotification", format("%01d",count.index+1)))}"
-  alarm_description   = "Status checks have failed for system, generating ticket."
-  namespace           = "AWS/EC2"
-  statistic           = "Minimum"
-  comparison_operator = "GreaterThanThreshold"
-  threshold           = "0"
-  unit                = "Count"
-  evaluation_periods  = "10"
-  period              = "60"
-  metric_name         = "StatusCheckFailed_System"
-  alarm_actions       = ["${local.rs_alarm_action[local.rs_alarm_option]}"]
-  ok_actions          = ["${local.rs_ok_action[local.rs_alarm_option]}"]
+module "status_check_failed_system_alarm_ticket" {
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm//?ref=v0.0.1"
 
-  dimensions {
-    InstanceId = "${element(aws_instance.threat_manager.*.id, count.index)}"
-  }
+  alarm_count              = "${var.az_count}"
+  alarm_description        = "Status checks have failed for system, generating ticket."
+  alarm_name               = "${var.name}-SystemRecoveryNotification"
+  comparison_operator      = "GreaterThanThreshold"
+  dimensions               = "${data.null_data_source.alarm_dimensions.*.outputs}"
+  evaluation_periods       = "10"
+  metric_name              = "StatusCheckFailed_System"
+  namespace                = "AWS/EC2"
+  notification_topic       = ["${var.notification_topic}"]
+  period                   = "60"
+  rackspace_alarms_enabled = true
+  rackspace_managed        = "${var.rackspace_managed}"
+  severity                 = "emergency"
+  statistic                = "Minimum"
+  threshold                = "0"
+  unit                     = "Count"
 }
 
-resource "aws_cloudwatch_metric_alarm" "status_check_failed_instance_alarm_ticket" {
-  count               = "${var.az_count}"
-  alarm_name          = "${join("-", list(var.name, "InstanceRecoveryNotification", format("%01d",count.index+1)))}"
-  alarm_description   = "Status checks have failed for instance, generating ticket."
-  namespace           = "AWS/EC2"
-  statistic           = "Minimum"
-  comparison_operator = "GreaterThanThreshold"
-  threshold           = "0"
-  unit                = "Count"
-  evaluation_periods  = "10"
-  period              = "60"
-  metric_name         = "StatusCheckFailed_Instance"
-  ok_actions          = ["${local.rs_ok_action[local.rs_alarm_option]}"]
-  alarm_actions       = ["${local.rs_alarm_action[local.rs_alarm_option]}"]
+module "status_check_failed_instance_alarm_ticket" {
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm//?ref=v0.0.1"
 
-  dimensions {
-    InstanceId = "${element(aws_instance.threat_manager.*.id, count.index)}"
-  }
+  alarm_count              = "${var.az_count}"
+  alarm_description        = "Status checks have failed for instance, generating ticket."
+  alarm_name               = "${var.name}-InstanceRecoveryNotification"
+  comparison_operator      = "GreaterThanThreshold"
+  dimensions               = "${data.null_data_source.alarm_dimensions.*.outputs}"
+  evaluation_periods       = "10"
+  metric_name              = "StatusCheckFailed_Instance"
+  namespace                = "AWS/EC2"
+  notification_topic       = ["${var.notification_topic}"]
+  rackspace_alarms_enabled = true
+  rackspace_managed        = "${var.rackspace_managed}"
+  severity                 = "emergency"
+  statistic                = "Minimum"
+  period                   = "60"
+  statistic                = "Minimum"
+  threshold                = "0"
+  unit                     = "Count"
 }
 
 resource "aws_cloudwatch_metric_alarm" "status_check_failed_instance_alarm_reboot" {
-  count               = "${var.az_count}"
-  alarm_name          = "${join("-", list(var.name, "InstanceRecoveryAlarm", format("%01d",count.index+1)))}"
+  count = "${var.az_count}"
+
+  alarm_actions       = ["arn:aws:swf:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:action/actions/AWS_EC2.InstanceId.Reboot/1.0"]
   alarm_description   = "Status checks have failed for instance, rebooting system."
-  namespace           = "AWS/EC2"
-  statistic           = "Minimum"
+  alarm_name          = "${join("-", list(var.name, "InstanceRecoveryAlarm", format("%01d",count.index+1)))}"
   comparison_operator = "GreaterThanThreshold"
+  dimensions          = "${data.null_data_source.alarm_dimensions.*.outputs[count.index]}"
+  evaluation_periods  = "5"
+  metric_name         = "StatusCheckFailed_Instance"
+  namespace           = "AWS/EC2"
+  period              = "60"
+  statistic           = "Minimum"
   threshold           = "0"
   unit                = "Count"
-  evaluation_periods  = "5"
-  period              = "60"
-  metric_name         = "StatusCheckFailed_Instance"
-  alarm_actions       = ["arn:aws:swf:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:action/actions/AWS_EC2.InstanceId.Reboot/1.0"]
-
-  dimensions {
-    InstanceId = "${element(aws_instance.threat_manager.*.id, count.index)}"
-  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "status_check_failed_system_alarm_recover" {
-  count               = "${var.az_count}"
-  alarm_name          = "${join("-", list(var.name, "SystemRecoveryAlarm", format("%01d",count.index+1)))}"
+  count = "${var.az_count}"
+
+  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:recover"]
   alarm_description   = "Status checks have failed for system, recovering instance"
-  namespace           = "AWS/EC2"
-  statistic           = "Minimum"
+  alarm_name          = "${join("-", list(var.name, "SystemRecoveryAlarm", format("%01d",count.index+1)))}"
   comparison_operator = "GreaterThanThreshold"
+  dimensions          = "${data.null_data_source.alarm_dimensions.*.outputs[count.index]}"
+  evaluation_periods  = "2"
+  metric_name         = "StatusCheckFailed_System"
+  namespace           = "AWS/EC2"
+  period              = "60"
+  statistic           = "Minimum"
   threshold           = "0"
   unit                = "Count"
-  evaluation_periods  = "2"
-  period              = "60"
-  metric_name         = "StatusCheckFailed_System"
-  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:recover"]
+}
 
-  dimensions {
+data "null_data_source" "alarm_dimensions" {
+  count = "${var.az_count}"
+
+  inputs = {
     InstanceId = "${element(aws_instance.threat_manager.*.id, count.index)}"
   }
 }
