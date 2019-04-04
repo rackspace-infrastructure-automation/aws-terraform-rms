@@ -9,13 +9,13 @@ provider "aws" {
 }
 
 module "vpc" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork//?ref=v0.0.1"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork//?ref=v0.0.9"
 
   vpc_name = "Test1VPC"
 }
 
 module "vpc_dr" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork//?ref=v0.0.1"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork//?ref=v0.0.9"
 
   providers = {
     aws = "aws.oregon"
@@ -25,7 +25,7 @@ module "vpc_dr" {
 }
 
 module "rms_main" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.4"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
 
   # Required parameters
   name    = "Test-RMS"
@@ -45,7 +45,7 @@ module "rms_main" {
 }
 
 module "rms_dr" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.4"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
 
   providers = {
     aws = "aws.oregon"
