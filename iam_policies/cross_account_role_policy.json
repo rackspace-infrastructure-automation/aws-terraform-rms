@@ -11,7 +11,9 @@
         "cloudfront:Get*",
         "cloudfront:List*",
         "cloudtrail:DescribeTrails",
+        "cloudtrail:GetEventSelectors",
         "cloudtrail:GetTrailStatus",
+        "cloudtrail:ListPublicKeys",
         "cloudtrail:ListTags",
         "cloudtrail:LookupEvents",
         "cloudwatch:Describe*",
@@ -45,7 +47,6 @@
         "lambda:List*",
         "logs:Describe*",
         "rds:Describe*",
-        "rds:DownloadDBLogFilePortion",
         "rds:ListTagsForResource",
         "redshift:Describe*",
         "route53:GetHostedZone",
@@ -59,6 +60,7 @@
         "sns:GetEndpointAttributes",
         "sns:GetSubscriptionAttributes",
         "sns:GetTopicAttributes",
+        "sqs:ListQueues",
         "s3:ListAllMyBuckets",
         "s3:ListBucket",
         "s3:GetBucketLocation",
@@ -86,9 +88,15 @@
     {
       "Effect": "Allow",
       "Action": [
+          "sns:gettopicattributes",
+          "sns:listtopics"
+      ],
+      "Resource": "arn:aws:sns:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "sns:addpermission",
-        "sns:gettopicattributes",
-        "sns:listtopics",
         "sns:settopicattributes",
         "sns:subscribe"
       ],
@@ -101,7 +109,6 @@
         "sqs:DeleteQueue",
         "sqs:SetQueueAttributes",
         "sqs:GetQueueAttributes",
-        "sqs:ListQueues",
         "sqs:ReceiveMessage",
         "sqs:DeleteMessage",
         "sqs:GetQueueUrl"
