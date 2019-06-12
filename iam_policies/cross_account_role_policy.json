@@ -78,6 +78,10 @@
       "Action": [
         "iam:Get*",
         "iam:List*",
+        "iam:GetPolicyVersion",
+        "iam:GetPolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
         "iam:ListRoles",
         "iam:GetRolePolicy",
         "iam:GetAccountSummary",
