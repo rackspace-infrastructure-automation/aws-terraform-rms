@@ -16,6 +16,12 @@ module "rms_main" {
 ```
 
 Full working references are available at [examples](examples)
+## Other TF Modules Used
+Using [aws-terraform-cloudwatch_alarm](https://github.com/rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm) to create the following CloudWatch Alarms:
+	- status_check_failed_system_alarm_ticket
+	- status_check_failed_instance_alarm_ticket
+	- status_check_failed_instance_alarm_reboot
+	- status_check_failed_system_alarm_recover
 
 ## Inputs
 
