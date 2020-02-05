@@ -36,6 +36,11 @@ output "logging_role_arn" {
   value       = "${module.logging_role.arn}"
 }
 
+output "managed_instance_policy_arn" {
+  description = "RMS Managed instance policy ARN"
+  value       = "${aws_iam_policy.managed_instance_policy.*.arn}"
+}
+
 output "sqs_queue_name" {
   description = "Name of the Alert Logic SQS queue"
   value       = "${aws_sqs_queue.altm_queue.*.name}"

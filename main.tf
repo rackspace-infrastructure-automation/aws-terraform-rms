@@ -4,26 +4,26 @@
  * This module deploys the required infrastructure for an RMS managed Alert Logic deployment.  This includes Alert Logic Threat Manager appliances in each AZ of the VPC, and required IAM roles to allow for Alert Logic scanning inventory scanning and log ingestion.
  *
  *
- *## Basic Usage
+ * ## Basic Usage
  *
- *```
- *module "rms_main" {
+ * ```HCL
+ * module "rms_main" {
  *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
  *
  *  name    = "Test-RMS"
  *  subnets = "${module.vpc.private_subnets}"
  *
  *  alert_logic_customer_id = "123456789"
- *}
- *```
+ * }
+ * ```
  *
  * Full working references are available at [examples](examples)
  * ## Other TF Modules Used
  * Using [aws-terraform-cloudwatch_alarm](https://github.com/rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm) to create the following CloudWatch Alarms:
- * 	- status_check_failed_system_alarm_ticket
- * 	- status_check_failed_instance_alarm_ticket
- * 	- status_check_failed_instance_alarm_reboot
- * 	- status_check_failed_system_alarm_recover
+ * - status_check_failed_system_alarm_ticket
+ * - status_check_failed_instance_alarm_ticket
+ * - status_check_failed_instance_alarm_reboot
+ * - status_check_failed_system_alarm_recover
  */
 
 provider "aws" {
@@ -121,6 +121,12 @@ locals {
   dns_ips = ["8.8.4.4/32", "8.8.8.8/32"]
 }
 
+locals {
+  sqs_tags = {
+    Name = "${var.name}-SQSqueue"
+  }
+}
+
 resource "aws_sqs_queue" "altm_queue" {
   count = "${local.iam_build}"
 
@@ -129,7 +135,7 @@ resource "aws_sqs_queue" "altm_queue" {
   tags = "${merge(
     local.tags,
     var.tags,
-    map("Name", "${var.name}-SQSqueue"),
+    local.sqs_tags,
   )}"
 }
 
@@ -186,13 +192,17 @@ data "aws_iam_policy_document" "cross_account_assume_role_policy" {
   }
 }
 
+locals {
+  cross_account_role_policy_filename = "${path.module}/iam_policies/cross_account_role_policy.json"
+}
+
 module "cross_account_role" {
   source = "./iam_role"
 
   name               = "${var.name}-CrossAccountRole"
   build_state        = "${local.iam_build}"
   assume_role_policy = "${data.aws_iam_policy_document.cross_account_assume_role_policy.json}"
-  policy_file        = "${"${path.module}/iam_policies/cross_account_role_policy.json"}"
+  policy_file        = "${local.cross_account_role_policy_filename}"
 
   policy_vars = {
     cloudtrail_sns_topic = "${local.cloudtrail_sns_topic}"
@@ -217,21 +227,46 @@ data "aws_iam_policy_document" "logging_assume_role_policy" {
   }
 }
 
+locals {
+  logging_role_policy_filename = "${path.module}/iam_policies/logging_role_policy.json"
+
+  default_bucket = "${data.aws_canonical_user_id.current.display_name}-logs"
+}
+
 module "logging_role" {
   source = "./iam_role"
 
   name               = "${var.name}-LoggingRole"
   build_state        = "${local.iam_build}"
   assume_role_policy = "${data.aws_iam_policy_document.logging_assume_role_policy.json}"
-  policy_file        = "${"${path.module}/iam_policies/logging_role_policy.json"}"
+  policy_file        = "${local.logging_role_policy_filename}"
 
   policy_vars = {
     cloudtrail_bucket = "${var.cloudtrail_bucket != "" ?
                            var.cloudtrail_bucket :
-                           "${data.aws_canonical_user_id.current.display_name}-logs"
+                           local.default_bucket
                          }"
 
     sqs_queue_arn = "${element(concat(aws_sqs_queue.altm_queue.*.arn, list("")),0)}"
+  }
+}
+
+data "local_file" "rms_managed_instance_policy" {
+  filename = "${path.module}/iam_policies/managed_instance_policy.json"
+}
+
+resource "aws_iam_policy" "managed_instance_policy" {
+  count = "${local.iam_build}"
+
+  description = "Allows SNS and S3 access for managed instances."
+  name_prefix = "rms_managed_instance"
+  path        = "/"
+  policy      = "${data.local_file.rms_managed_instance_policy.content}"
+}
+
+locals {
+  app_sg_tags = {
+    Name = "${var.name}-ApplianceSecurityGroup"
   }
 }
 
@@ -299,8 +334,14 @@ resource "aws_security_group" "appliance_sg" {
   tags = "${merge(
     local.tags,
     var.tags,
-    map("Name", "${var.name}-ApplianceSecurityGroup"),
+    local.app_sg_tags,
   )}"
+}
+
+locals {
+  agent_sg_tags = {
+    Name = "${var.name}-AgentSecurityGroup"
+  }
 }
 
 resource "aws_security_group" "agent_sg" {
@@ -325,7 +366,7 @@ resource "aws_security_group" "agent_sg" {
   tags = "${merge(
     local.tags,
     var.tags,
-    map("Name", "${var.name}-AgentSecurityGroup"),
+    local.agent_sg_tags,
   )}"
 }
 
@@ -341,12 +382,16 @@ data "aws_iam_policy_document" "ec2_assume_role_policy" {
   }
 }
 
+locals {
+  appliance_role_policy_filename = "${path.module}/iam_policies/appliance_role_policy.json"
+}
+
 module "instance_role" {
   source = "./iam_role"
 
   name               = "${var.name}-InstanceRole"
   assume_role_policy = "${data.aws_iam_policy_document.ec2_assume_role_policy.json}"
-  policy_file        = "${"${path.module}/iam_policies/appliance_role_policy.json"}"
+  policy_file        = "${local.appliance_role_policy_filename}"
   policy_vars        = {}
   policy_arns        = ["arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"]
 }
@@ -355,6 +400,16 @@ resource "aws_iam_instance_profile" "instance_profile" {
   name_prefix = "${var.name}-InstanceRole-"
   role        = "${module.instance_role.name}"
   path        = "/"
+}
+
+locals {
+  altm_tag_name = [
+    "${var.name}-ThreatManager-01",
+    "${var.name}-ThreatManager-02",
+    "${var.name}-ThreatManager-03",
+    "${var.name}-ThreatManager-04",
+    "${var.name}-ThreatManager-05",
+  ]
 }
 
 resource "aws_instance" "threat_manager" {
@@ -370,7 +425,7 @@ resource "aws_instance" "threat_manager" {
   tags = "${merge(
     local.tags,
     var.tags,
-    map("Name", "${var.name}-ThreatManager-${format("%01d",count.index+1)}"),
+    map("Name", local.altm_tag_name[count.index+1]),
   )}"
 
   root_block_device {
