@@ -10,8 +10,12 @@ resource "aws_iam_role" "role" {
   assume_role_policy = "${var.assume_role_policy}"
 }
 
+data "local_file" "policy_file" {
+  filename = "${var.policy_file}"
+}
+
 data "template_file" "role_policy" {
-  template = "${file("${var.policy_file}")}"
+  template = "${data.local_file.policy_file.content}"
   vars     = "${var.policy_vars}"
 }
 

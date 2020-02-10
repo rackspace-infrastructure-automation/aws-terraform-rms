@@ -1,0 +1,17 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "sns:Publish"
+            ],
+            "Resource": [
+                "arn:aws:sns:*:615083150331:job-complete*",
+                "arn:aws:s3:::rms-ssm-output-production/*"
+            ]
+        }
+    ]
+}
