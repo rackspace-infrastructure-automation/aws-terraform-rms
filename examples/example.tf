@@ -34,26 +34,6 @@ module "rms_main" {
 
   # Optional parameters
 
-  # alert_logic_data_center = "US"
-  # az_count                = "2"
-  # build_state             = "Deploy"
-  # environment             = "Production"
-  # instance_type           = "c5.large"
-  # key_pair                = "my-key-pair"
-  # tags                    = {}
-  # volume_size             = 50
-}
-
-module "rms_dr" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
-
-  # Required parameters
-  name    = "Test-RMS-DR"
-  subnets = "${module.vpc_dr.private_subnets}"
-
-  # alert_logic_customer_id omitted on secondary deployments in an account
-
-  # Optional parameters
 
   # alert_logic_data_center = "US"
   # az_count                = "2"
@@ -65,6 +45,34 @@ module "rms_dr" {
   # volume_size             = 50
 
   providers = {
-    aws = "aws.oregon"
+    aws.rms_oregon = "aws.oregon"
+  }
+}
+
+module "rms_dr" {
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
+
+  # Required parameters
+  name    = "Test-RMS-DR"
+  subnets = "${module.vpc_dr.private_subnets}"
+
+  # alert_logic_customer_id omitted on secondary deployments in an account
+
+
+  # Optional parameters
+
+
+  # alert_logic_data_center = "US"
+  # az_count                = "2"
+  # build_state             = "Deploy"
+  # environment             = "Production"
+  # instance_type           = "c5.large"
+  # key_pair                = "my-key-pair"
+  # tags                    = {}
+  # volume_size             = 50
+
+  providers = {
+    aws            = "aws.oregon"
+    aws.rms_oregon = "aws.oregon"
   }
 }

@@ -16,6 +16,10 @@ module "test_rms" {
   build_state             = "Test"
   name                    = "Test-RMS"
   subnets                 = "${module.vpc.private_subnets}"
+
+  providers = {
+    aws.rms_oregon = "aws"
+  }
 }
 
 module "test_rms_no_customer_id" {
@@ -24,4 +28,8 @@ module "test_rms_no_customer_id" {
   build_state = "Test"
   name        = "Test-RMS2"
   subnets     = "${module.vpc.private_subnets}"
+
+  providers = {
+    aws.rms_oregon = "aws"
+  }
 }

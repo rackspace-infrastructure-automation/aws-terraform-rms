@@ -1,7 +1,3 @@
-provider "template" {
-  version = "~> 1.0"
-}
-
 resource "aws_iam_role" "role" {
   count = "${var.build_state ? 1 : 0}"
 
@@ -22,9 +18,9 @@ data "template_file" "role_policy" {
 resource "aws_iam_role_policy" "role_policy" {
   count = "${var.build_state ? 1 : 0}"
 
-  name = "${var.name}Policy"
+  name   = "${var.name}Policy"
   policy = "${data.template_file.role_policy.rendered}"
-  role = "${aws_iam_role.role.id}"
+  role   = "${aws_iam_role.role.id}"
 }
 
 resource "aws_iam_role_policy_attachment" "attach_managed_policy" {
