@@ -6,12 +6,12 @@ This module deploys the required infrastructure for an RMS managed Alert Logic d
 
 ```HCL
 module "rms_main" {
- source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
-
- name    = "Test-RMS"
- subnets = "${module.vpc.private_subnets}"
+ source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
 
  alert_logic_customer_id = "123456789"
+ name                    = "Test-RMS"
+ subnets                 = "${module.vpc.private_subnets}"
+
 }
 ```
 
