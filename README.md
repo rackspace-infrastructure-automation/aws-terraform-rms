@@ -11,19 +11,24 @@ to create several of the resources.  The dependancies for these resources only e
 
 ```HCL
 module "rms_main" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.0"
 
   alert_logic_customer_id = "123456789"
   name                    = "Test-RMS"
-  subnets                 = "${module.vpc.private_subnets}"
+  subnets                 = module.vpc.private_subnets
 
   providers = {
-    aws.rms_oregon = "aws.oregon"
+    aws.rms_oregon = aws.oregon
   }
 }
 ```
 
 Full working references are available at [examples](examples)
+
+## Terraform 0.12 upgrade
+
+There should be no changes required to move from previous versions of this module to version 0.12.0 or higher.
+
 ## Other TF Modules Used  
 Using [aws-terraform-cloudwatch\_alarm](https://github.com/rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm) to create the following CloudWatch Alarms:
 - status\_check\_failed\_system\_alarm\_ticket
@@ -35,8 +40,8 @@ Using [aws-terraform-cloudwatch\_alarm](https://github.com/rackspace-infrastruct
 
 | Name | Version |
 |------|---------|
-| aws | n/a |
-| aws.rms\_oregon | n/a |
+| aws | >= 2.1.0 |
+| aws.rms\_oregon | >= 2.1.0 |
 | local | n/a |
 | null | n/a |
 
@@ -46,18 +51,18 @@ Using [aws-terraform-cloudwatch\_alarm](https://github.com/rackspace-infrastruct
 |------|-------------|------|---------|:-----:|
 | alert\_logic\_customer\_id | The Alert Logic Customer ID, provided by RMS. A numeric string between 3 and 12 characters in length. Omit if this is not the first RMS deployment under this account. | `string` | `""` | no |
 | alert\_logic\_data\_center | Alert Logic Data Center where logs will be shipped. | `string` | `"US"` | no |
-| az\_count | Number of Availability Zones. For environments where only Log ingestion is required, please select 0 | `string` | `2` | no |
+| az\_count | Number of Availability Zones. For environments where only Log ingestion is required, please select 0 | `number` | `2` | no |
 | build\_state | Allowed values 'Deploy' or 'Test'.  Select 'Deploy' unless the stack is being built for testing in an account without access to the Alert Logic AMIs. | `string` | `"Deploy"` | no |
 | cloudtrail\_bucket | The desired cloudtrail log bucket to monitor.  In most cases, the correct bucket will be determined via the canonical user id display name, but if a nonstand value is used, or a custom bucket name is needed, the full bucket name can be provided here. | `string` | `""` | no |
 | environment | Application environment for which this infrastructure is being created. e.g. Development/Production. | `string` | `"Production"` | no |
 | instance\_type | The instance type to use for the Alert Logic appliances.  Defaults to c5.large | `string` | `"c5.large"` | no |
 | key\_pair | Name of an existing EC2 KeyPair to enable SSH access to the instances. | `string` | `""` | no |
 | name | The name prefix to use for the resources created in this module. | `string` | n/a | yes |
-| notification\_topic | List of SNS Topic ARNs to use for customer notifications from CloudWatch alarms. (OPTIONAL) | `list` | `[]` | no |
-| rackspace\_managed | Boolean parameter controlling if instance will be fully managed by Rackspace support teams, created CloudWatch alarms that generate tickets, and utilize Rackspace managed SSM documents. | `string` | `true` | no |
-| subnets | Private Subnet IDs for deployment. This is for the ALTM appliances. | `list` | n/a | yes |
-| tags | Custom tags to apply to all resources. | `map` | `{}` | no |
-| volume\_size | Select EBS Volume Size in GB. | `string` | `"50"` | no |
+| notification\_topic | List of SNS Topic ARNs to use for customer notifications from CloudWatch alarms. (OPTIONAL) | `list(string)` | `[]` | no |
+| rackspace\_managed | Boolean parameter controlling if instance will be fully managed by Rackspace support teams, created CloudWatch alarms that generate tickets, and utilize Rackspace managed SSM documents. | `bool` | `true` | no |
+| subnets | Private Subnet IDs for deployment. This is for the ALTM appliances. | `list(string)` | n/a | yes |
+| tags | Custom tags to apply to all resources. | `map(string)` | `{}` | no |
+| volume\_size | Select EBS Volume Size in GB. | `number` | `50` | no |
 
 ## Outputs
 
