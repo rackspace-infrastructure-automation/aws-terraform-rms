@@ -1,19 +1,26 @@
 /**
  * # aws-terraform-rms
  *
- * This module deploys the required infrastructure for an RMS managed Alert Logic deployment.  This includes Alert Logic Threat Manager appliances in each AZ of the VPC, and required IAM roles to allow for Alert Logic scanning inventory scanning and log ingestion.
+ * This module deploys the required infrastructure for an RMS managed Alert Logic deployment.  This includes
+ * Alert Logic Threat Manager appliances in each AZ of the VPC, and required IAM roles to allow for Alert
+ * Logic scanning inventory scanning and log ingestion.
  *
+ * **NOTE:** You must supply a provider configured to use the us-west-2 region into this module in order
+ * to create several of the resources.  The dependancies for these resources only exist in us-west-2.
  *
  * ## Basic Usage
  *
  * ```HCL
  * module "rms_main" {
- *  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
+ *   source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
  *
- *  name    = "Test-RMS"
- *  subnets = "${module.vpc.private_subnets}"
+ *   alert_logic_customer_id = "123456789"
+ *   name                    = "Test-RMS"
+ *   subnets                 = "${module.vpc.private_subnets}"
  *
- *  alert_logic_customer_id = "123456789"
+ *   providers = {
+ *     aws.rms_oregon = "aws.oregon"
+ *   }
  * }
  * ```
  *
@@ -27,8 +34,7 @@
  */
 
 provider "aws" {
-  region = "us-west-2"
-  alias  = "rms_oregon"
+  alias = "rms_oregon"
 }
 
 data "aws_region" "current" {}
@@ -53,12 +59,12 @@ locals {
   iam_build = "${var.alert_logic_customer_id != "" ? 1 : 0}"
 
   tags = {
-    Name                            = "${var.name}"
-    ServiceProvider                 = "Rackspace"
+    "rackspace:automation:ssmaudit" = "False"
     Environment                     = "${var.environment}"
+    Name                            = "${var.name}"
     ProductGroup                    = "RMS"
     ProductVendor                   = "AlertLogic"
-    "rackspace:automation:ssmaudit" = "False"
+    ServiceProvider                 = "Rackspace"
   }
 
   cloudtrail_sns_topic = "arn:aws:sns:us-west-2:${data.aws_caller_identity.current.account_id}:rackspace-trail"
@@ -133,61 +139,65 @@ resource "aws_sqs_queue" "altm_queue" {
   name_prefix = "${var.name}-"
 
   tags = "${merge(
-    local.tags,
     var.tags,
+    local.tags,
     local.sqs_tags,
   )}"
+}
+
+data "aws_iam_policy_document" "altm_queue_policy" {
+  count = "${local.iam_build}"
+
+  statement {
+    actions   = ["sqs:SendMessage"]
+    effect    = "Allow"
+    resources = ["${aws_sqs_queue.altm_queue.arn}"]
+
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+      values   = ["${local.cloudtrail_sns_topic}"]
+    }
+  }
 }
 
 resource "aws_sqs_queue_policy" "altm_queue_policy" {
   count = "${local.iam_build}"
 
+  policy    = "${data.aws_iam_policy_document.altm_queue_policy.json}"
   queue_url = "${aws_sqs_queue.altm_queue.id}"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sqs:SendMessage",
-      "Effect": "Allow",
-      "Resource": [ "${aws_sqs_queue.altm_queue.arn}"],
-      "Principal": {"AWS": "*"},
-      "Condition": {
-        "ArnEquals": {
-          "aws:SourceArn": "${local.cloudtrail_sns_topic}"
-        }
-      }
-    }
-  ]
-}
-POLICY
 }
 
 # SNS Subscription must be created in us-west-2, so use "aws.rms_oregon" provider
 resource "aws_sns_topic_subscription" "altm_sns_subscription" {
-  count    = "${local.iam_build}"
+  count = "${local.iam_build}"
+
   provider = "aws.rms_oregon"
 
-  topic_arn = "${local.cloudtrail_sns_topic}"
-  protocol  = "sqs"
   endpoint  = "${aws_sqs_queue.altm_queue.arn}"
+  protocol  = "sqs"
+  topic_arn = "${local.cloudtrail_sns_topic}"
 }
 
 data "aws_iam_policy_document" "cross_account_assume_role_policy" {
   statement {
-    effect  = "Allow"
     actions = ["sts:AssumeRole"]
+    effect  = "Allow"
 
     principals {
-      type        = "AWS"
       identifiers = ["${lookup(local.alert_logic_details[var.alert_logic_data_center], "tm_principal")}"]
+      type        = "AWS"
     }
 
     condition {
       test     = "StringEquals"
-      variable = "sts:ExternalId"
       values   = ["${var.alert_logic_customer_id}"]
+      variable = "sts:ExternalId"
     }
   }
 }
@@ -199,9 +209,9 @@ locals {
 module "cross_account_role" {
   source = "./iam_role"
 
-  name               = "${var.name}-CrossAccountRole"
-  build_state        = "${local.iam_build}"
   assume_role_policy = "${data.aws_iam_policy_document.cross_account_assume_role_policy.json}"
+  build_state        = "${local.iam_build}"
+  name               = "${var.name}-CrossAccountRole"
   policy_file        = "${local.cross_account_role_policy_filename}"
 
   policy_vars = {
@@ -211,18 +221,18 @@ module "cross_account_role" {
 
 data "aws_iam_policy_document" "logging_assume_role_policy" {
   statement {
-    effect  = "Allow"
     actions = ["sts:AssumeRole"]
+    effect  = "Allow"
 
     principals {
-      type        = "AWS"
       identifiers = ["${lookup(local.alert_logic_details[var.alert_logic_data_center], "log_principal")}"]
+      type        = "AWS"
     }
 
     condition {
       test     = "StringEquals"
-      variable = "sts:ExternalId"
       values   = ["${var.alert_logic_customer_id}"]
+      variable = "sts:ExternalId"
     }
   }
 }
@@ -236,9 +246,9 @@ locals {
 module "logging_role" {
   source = "./iam_role"
 
-  name               = "${var.name}-LoggingRole"
-  build_state        = "${local.iam_build}"
   assume_role_policy = "${data.aws_iam_policy_document.logging_assume_role_policy.json}"
+  build_state        = "${local.iam_build}"
+  name               = "${var.name}-LoggingRole"
   policy_file        = "${local.logging_role_policy_filename}"
 
   policy_vars = {
@@ -275,65 +285,65 @@ resource "aws_security_group" "appliance_sg" {
   description = "Enable In-Out access for Alert Logic Threat Management Services."
   vpc_id      = "${data.aws_subnet.selected.vpc_id}"
 
-  ingress {
-    from_port   = 7777
-    to_port     = 7777
-    protocol    = "tcp"
-    cidr_blocks = ["${data.aws_vpc.selected.cidr_block}"]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["${data.aws_vpc.selected.cidr_block}"]
-  }
-
   egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
     cidr_blocks = "${local.alert_logic_ips[var.alert_logic_data_center]}"
+    from_port   = 443
+    protocol    = "tcp"
+    to_port     = 443
   }
 
   egress {
+    cidr_blocks = "${local.alert_logic_ips[var.alert_logic_data_center]}"
     from_port   = 4138
+    protocol    = "tcp"
     to_port     = 4138
-    protocol    = "tcp"
-    cidr_blocks = "${local.alert_logic_ips[var.alert_logic_data_center]}"
   }
 
   egress {
+    cidr_blocks = "${local.alert_logic_ips[var.alert_logic_data_center]}"
     from_port   = 123
+    protocol    = "udp"
     to_port     = 123
-    protocol    = "udp"
-    cidr_blocks = "${local.alert_logic_ips[var.alert_logic_data_center]}"
   }
 
   egress {
-    from_port   = 53
-    to_port     = 53
-    protocol    = "tcp"
     cidr_blocks = "${local.dns_ips}"
-  }
-
-  egress {
     from_port   = 53
+    protocol    = "tcp"
     to_port     = 53
-    protocol    = "udp"
-    cidr_blocks = "${local.dns_ips}"
   }
 
   egress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
+    cidr_blocks = "${local.dns_ips}"
+    from_port   = 53
+    protocol    = "udp"
+    to_port     = 53
+  }
+
+  egress {
     cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 80
+    protocol    = "tcp"
+    to_port     = 80
+  }
+
+  ingress {
+    cidr_blocks = ["${data.aws_vpc.selected.cidr_block}"]
+    from_port   = 7777
+    protocol    = "tcp"
+    to_port     = 7777
+  }
+
+  ingress {
+    cidr_blocks = ["${data.aws_vpc.selected.cidr_block}"]
+    from_port   = 443
+    protocol    = "tcp"
+    to_port     = 443
   }
 
   tags = "${merge(
-    local.tags,
     var.tags,
+    local.tags,
     local.app_sg_tags,
   )}"
 }
@@ -345,39 +355,39 @@ locals {
 }
 
 resource "aws_security_group" "agent_sg" {
-  name        = "${var.name}-AgentSecurityGroup"
   description = "Enable Out access to Alert Logic Threat Management Device."
+  name        = "${var.name}-AgentSecurityGroup"
   vpc_id      = "${data.aws_subnet.selected.vpc_id}"
 
   egress {
     from_port       = 7777
-    to_port         = 7777
     protocol        = "tcp"
     security_groups = ["${aws_security_group.appliance_sg.id}"]
+    to_port         = 7777
   }
 
   egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 443
+    protocol    = "tcp"
+    to_port     = 443
   }
 
   tags = "${merge(
-    local.tags,
     var.tags,
+    local.tags,
     local.agent_sg_tags,
   )}"
 }
 
 data "aws_iam_policy_document" "ec2_assume_role_policy" {
   statement {
-    effect  = "Allow"
     actions = ["sts:AssumeRole"]
+    effect  = "Allow"
 
     principals {
-      type        = "Service"
       identifiers = ["ec2.amazonaws.com"]
+      type        = "Service"
     }
   }
 }
@@ -389,17 +399,17 @@ locals {
 module "instance_role" {
   source = "./iam_role"
 
-  name               = "${var.name}-InstanceRole"
   assume_role_policy = "${data.aws_iam_policy_document.ec2_assume_role_policy.json}"
+  name               = "${var.name}-InstanceRole"
+  policy_arns        = ["arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"]
   policy_file        = "${local.appliance_role_policy_filename}"
   policy_vars        = {}
-  policy_arns        = ["arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"]
 }
 
 resource "aws_iam_instance_profile" "instance_profile" {
   name_prefix = "${var.name}-InstanceRole-"
-  role        = "${module.instance_role.name}"
   path        = "/"
+  role        = "${module.instance_role.name}"
 }
 
 locals {
@@ -413,26 +423,27 @@ locals {
 }
 
 resource "aws_instance" "threat_manager" {
-  count                  = "${var.az_count}"
+  count = "${var.az_count}"
+
   ami                    = "${lookup(local.altm_image[var.build_state], data.aws_region.current.name)}"
-  subnet_id              = "${element(var.subnets, count.index)}"
-  vpc_security_group_ids = ["${aws_security_group.appliance_sg.id}"]
+  iam_instance_profile   = "${aws_iam_instance_profile.instance_profile.name}"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair}"
   monitoring             = true
-  iam_instance_profile   = "${aws_iam_instance_profile.instance_profile.name}"
-
-  tags = "${merge(
-    local.tags,
-    var.tags,
-    map("Name", local.altm_tag_name[count.index+1]),
-  )}"
+  subnet_id              = "${element(var.subnets, count.index)}"
+  vpc_security_group_ids = ["${aws_security_group.appliance_sg.id}"]
 
   root_block_device {
     volume_type           = "gp2"
     volume_size           = "${var.volume_size}"
     delete_on_termination = true
   }
+
+  tags = "${merge(
+    local.tags,
+    var.tags,
+    map("Name", local.altm_tag_name[count.index]),
+  )}"
 }
 
 module "status_check_failed_system_alarm_ticket" {
@@ -468,11 +479,11 @@ module "status_check_failed_instance_alarm_ticket" {
   metric_name              = "StatusCheckFailed_Instance"
   namespace                = "AWS/EC2"
   notification_topic       = ["${var.notification_topic}"]
+  period                   = "60"
   rackspace_alarms_enabled = true
   rackspace_managed        = "${var.rackspace_managed}"
   severity                 = "emergency"
   statistic                = "Minimum"
-  period                   = "60"
   statistic                = "Minimum"
   threshold                = "0"
   unit                     = "Count"

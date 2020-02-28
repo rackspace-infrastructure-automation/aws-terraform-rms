@@ -17,54 +17,62 @@ module "vpc" {
 module "vpc_dr" {
   source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork//?ref=v0.0.9"
 
+  vpc_name = "Test2VPC"
+
   providers = {
     aws = "aws.oregon"
   }
-
-  vpc_name = "Test2VPC"
 }
 
 module "rms_main" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
 
-  # Required parameters
-  name    = "Test-RMS"
-  subnets = "${module.vpc.private_subnets}"
-
-  alert_logic_customer_id = "123456789" # Required for first deployment in an account
+  # alert_logic_customer_id required for first deployment in an account
+  alert_logic_customer_id = "123456789"
+  name                    = "Test-RMS"
+  subnets                 = "${module.vpc.private_subnets}"
 
   # Optional parameters
+
+
   # alert_logic_data_center = "US"
-  # az_count      = "2"
-  # build_state   = "Deploy"
-  # environment   = "Production"
-  # instance_type = "c5.large"
-  # key_pair      = "titus-aws2"
-  # tags = {}
-  # volume_size = 50
+  # az_count                = "2"
+  # build_state             = "Deploy"
+  # environment             = "Production"
+  # instance_type           = "c5.large"
+  # key_pair                = "my-key-pair"
+  # tags                    = {}
+  # volume_size             = 50
+
+  providers = {
+    aws.rms_oregon = "aws.oregon"
+  }
 }
 
 module "rms_dr" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
-
-  providers = {
-    aws = "aws.oregon"
-  }
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
 
   # Required parameters
   name    = "Test-RMS-DR"
   subnets = "${module.vpc_dr.private_subnets}"
 
-  # alert_logic_customer_id = "" # Not required as this is second deployment in account
+  # alert_logic_customer_id omitted on secondary deployments in an account
+
 
   # Optional parameters
 
+
   # alert_logic_data_center = "US"
-  # az_count      = "2"
-  # build_state   = "Deploy"
-  # environment   = "Production"
-  # instance_type = "c5.large"
-  # key_pair      = "titus-aws2"
-  # tags = {}
-  # volume_size = 50
+  # az_count                = "2"
+  # build_state             = "Deploy"
+  # environment             = "Production"
+  # instance_type           = "c5.large"
+  # key_pair                = "my-key-pair"
+  # tags                    = {}
+  # volume_size             = 50
+
+  providers = {
+    aws            = "aws.oregon"
+    aws.rms_oregon = "aws.oregon"
+  }
 }

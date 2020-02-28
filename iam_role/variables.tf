@@ -1,5 +1,5 @@
-variable "name" {
-  description = "The name prefix for these IAM resources"
+variable "assume_role_policy" {
+  description = "A json string containing the assume role policy to use for the IAM role."
   type        = "string"
 }
 
@@ -9,9 +9,15 @@ variable "build_state" {
   default     = true
 }
 
-variable "assume_role_policy" {
-  description = "A json string containing the assume role policy to use for the IAM role."
+variable "name" {
+  description = "The name prefix for these IAM resources"
   type        = "string"
+}
+
+variable "policy_arns" {
+  description = "A list of managed IAM policies to attach to the IAM role"
+  type        = "list"
+  default     = []
 }
 
 variable "policy_file" {
@@ -23,10 +29,4 @@ variable "policy_vars" {
   description = "A map of keys and values.  The keys referenced in the policy_file will be replaced by the appropriate value.  See https://www.terraform.io/docs/providers/template/d/file.html for further details."
   type        = "map"
   default     = {}
-}
-
-variable "policy_arns" {
-  description = "A list of managed IAM policies to attach to the IAM role"
-  type        = "list"
-  default     = []
 }

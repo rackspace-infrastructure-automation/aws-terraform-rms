@@ -16,16 +16,16 @@ variable "az_count" {
   default     = 2
 }
 
-variable "cloudtrail_bucket" {
-  description = "The desired cloudtrail log bucket to monitor.  In most cases, the correct bucket will be determined via the canonical user id display name, but if a nonstand value is used, or a custom bucket name is needed, the full bucket name can be provided here."
-  type        = "string"
-  default     = ""
-}
-
 variable "build_state" {
   description = "Allowed values 'Deploy' or 'Test'.  Select 'Deploy' unless the stack is being built for testing in an account without access to the Alert Logic AMIs."
   type        = "string"
   default     = "Deploy"
+}
+
+variable "cloudtrail_bucket" {
+  description = "The desired cloudtrail log bucket to monitor.  In most cases, the correct bucket will be determined via the canonical user id display name, but if a nonstand value is used, or a custom bucket name is needed, the full bucket name can be provided here."
+  type        = "string"
+  default     = ""
 }
 
 variable "environment" {

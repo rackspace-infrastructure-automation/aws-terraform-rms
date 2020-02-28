@@ -12,18 +12,24 @@ module "vpc" {
 module "test_rms" {
   source = "../../module"
 
-  # Required parameters
-  name                    = "Test-RMS"
-  subnets                 = "${module.vpc.private_subnets}"
   alert_logic_customer_id = "123456789"
   build_state             = "Test"
+  name                    = "Test-RMS"
+  subnets                 = "${module.vpc.private_subnets}"
+
+  providers = {
+    aws.rms_oregon = "aws"
+  }
 }
 
 module "test_rms_no_customer_id" {
   source = "../../module"
 
-  # Required parameters
+  build_state = "Test"
   name        = "Test-RMS2"
   subnets     = "${module.vpc.private_subnets}"
-  build_state = "Test"
+
+  providers = {
+    aws.rms_oregon = "aws"
+  }
 }

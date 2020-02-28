@@ -1,17 +1,25 @@
 # aws-terraform-rms
 
-This module deploys the required infrastructure for an RMS managed Alert Logic deployment.  This includes Alert Logic Threat Manager appliances in each AZ of the VPC, and required IAM roles to allow for Alert Logic scanning inventory scanning and log ingestion.
+This module deploys the required infrastructure for an RMS managed Alert Logic deployment.  This includes  
+Alert Logic Threat Manager appliances in each AZ of the VPC, and required IAM roles to allow for Alert  
+Logic scanning inventory scanning and log ingestion.
+
+**NOTE:** You must supply a provider configured to use the us-west-2 region into this module in order  
+to create several of the resources.  The dependancies for these resources only exist in us-west-2.
 
 ## Basic Usage
 
 ```HCL
 module "rms_main" {
- source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.5"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.1.7"
 
- name    = "Test-RMS"
- subnets = "${module.vpc.private_subnets}"
+  alert_logic_customer_id = "123456789"
+  name                    = "Test-RMS"
+  subnets                 = "${module.vpc.private_subnets}"
 
- alert_logic_customer_id = "123456789"
+  providers = {
+    aws.rms_oregon = "aws.oregon"
+  }
 }
 ```
 
