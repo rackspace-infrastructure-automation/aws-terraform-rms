@@ -1,12 +1,16 @@
+terraform {
+  required_version = ">= 0.12"
+}
+
 provider "aws" {
   version = "~> 2.0"
   region  = "us-west-2"
 }
 
 module "vpc" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork?ref=v0.0.10"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-vpc_basenetwork?ref=v0.12.1"
 
-  vpc_name = "RMS-Test-VPC"
+  name = "RMS-Test-VPC"
 }
 
 module "test_rms" {
@@ -15,10 +19,10 @@ module "test_rms" {
   alert_logic_customer_id = "123456789"
   build_state             = "Test"
   name                    = "Test-RMS"
-  subnets                 = "${module.vpc.private_subnets}"
+  subnets                 = module.vpc.private_subnets
 
   providers = {
-    aws.rms_oregon = "aws"
+    aws.rms_oregon = aws
   }
 }
 
@@ -27,9 +31,10 @@ module "test_rms_no_customer_id" {
 
   build_state = "Test"
   name        = "Test-RMS2"
-  subnets     = "${module.vpc.private_subnets}"
+  subnets     = module.vpc.private_subnets
 
   providers = {
-    aws.rms_oregon = "aws"
+    aws.rms_oregon = aws
   }
 }
+
