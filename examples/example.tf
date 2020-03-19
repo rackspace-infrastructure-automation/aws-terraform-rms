@@ -8,8 +8,9 @@ provider "aws" {
 }
 
 provider "aws" {
-  region = "us-west-2"
-  alias  = "oregon"
+  version = "~> 2.2"
+  region  = "us-west-2"
+  alias   = "oregon"
 }
 
 module "vpc" {

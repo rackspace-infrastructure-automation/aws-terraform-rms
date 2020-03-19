@@ -50,11 +50,9 @@ provider "aws" {
   alias = "rms_oregon"
 }
 
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {
-}
+data "aws_caller_identity" "current" {}
 
 data "aws_canonical_user_id" "current" {
   # Explicitly setting this call to the us-west-2 region due to existing terraform bug

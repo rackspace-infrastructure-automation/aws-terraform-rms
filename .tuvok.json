@@ -1,0 +1,7 @@
+{
+  "checks": {},
+  "ignore": [
+    "provider_has_version",
+    "provider_has_region"
+  ]
+}
