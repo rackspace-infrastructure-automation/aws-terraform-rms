@@ -1,9 +1,9 @@
-output "RMS_Deployment_Info" {
+output "rms_deployment_info" {
   value       = module.test_rms.deployment_details
   description = "Information about the RMS deployment"
 }
 
-output "RMS_Deployment_Info_No_Customer_ID" {
+output "rms_deployment_info_no_customer_id" {
   value       = module.test_rms_no_customer_id.deployment_details
   description = "RMS DR deployment information"
 }
