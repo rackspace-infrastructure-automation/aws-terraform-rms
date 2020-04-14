@@ -1,0 +1,10 @@
+{
+  "checks": {
+    "provider_has_region": {
+      "severity": "WARNING"
+    },
+    "provider_has_version": {
+      "severity": "WARNING"
+    }
+  }
+}
