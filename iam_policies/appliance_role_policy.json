@@ -1,21 +1,48 @@
 {
   "Statement": [
-    {"Action": ["cloudformation:Describe*"],
-      "Resource": "*", "Effect": "Allow"},
-    {"Action": ["ssm:CreateAssociation",
-          "ssm:DescribeInstanceInformation"],
-      "Resource": "*", "Effect": "Allow"},
-    {"Action": ["cloudwatch:PutMetricData",
-          "cloudwatch:GetMetricStatistics",
-          "cloudwatch:ListMetrics",
-          "logs:CreateLogStream",
-          "ec2:DescribeTags",
-          "logs:DescribeLogStreams",
-          "logs:CreateLogGroup",
-          "logs:PutLogEvents",
-          "ssm:GetParameter"],
-      "Resource": "*", "Effect": "Allow"},
-    {"Action": ["ec2:DescribeTags"],
-      "Resource": "*", "Effect": "Allow"}
+    {
+      "Action": [
+        "cloudformation:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Action": [
+        "ssm:CreateAssociation",
+        "ssm:DescribeInstanceInformation",
+        "ssm:GetParameter"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Action": [
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:ListMetrics",
+        "cloudwatch:PutMetricData",
+        "ec2:DescribeTags",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetEncryptionConfiguration",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListMultipartUploadParts",
+        "s3:PutObject"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::rackspace-*/*"
+    }
   ]
 }

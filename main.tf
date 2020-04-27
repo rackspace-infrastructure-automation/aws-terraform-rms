@@ -12,7 +12,7 @@
  *
  * ```HCL
  * module "rms_main" {
- *   source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.0"
+ *   source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.2"
  *
  *   alert_logic_customer_id = "123456789"
  *   name                    = "Test-RMS"
@@ -384,9 +384,14 @@ module "instance_role" {
 
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role_policy.json
   name               = "${var.name}-InstanceRole"
-  policy_arns        = ["arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"]
   policy_file        = "${path.module}/iam_policies/appliance_role_policy.json"
   policy_vars        = {}
+
+  policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+    "arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess",
+  ]
 }
 
 resource "aws_iam_instance_profile" "instance_profile" {
