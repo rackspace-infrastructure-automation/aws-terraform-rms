@@ -30,7 +30,7 @@ module "vpc_dr" {
 }
 
 module "rms_main" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.0"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.2"
 
   # alert_logic_customer_id required for first deployment in an account
   alert_logic_customer_id = "123456789"
@@ -54,7 +54,7 @@ module "rms_main" {
 }
 
 module "rms_dr" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.0"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.2"
 
   # Required parameters
   name    = "Test-RMS-DR"

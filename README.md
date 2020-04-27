@@ -11,7 +11,7 @@ to create several of the resources.  The dependancies for these resources only e
 
 ```HCL
 module "rms_main" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.0"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rms//?ref=v0.12.2"
 
   alert_logic_customer_id = "123456789"
   name                    = "Test-RMS"
