@@ -427,7 +427,7 @@ resource "aws_instance" "threat_manager" {
 }
 
 module "status_check_failed_system_alarm_ticket" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm//?ref=v0.12.4"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm//?ref=v0.12.6"
 
   alarm_count              = var.az_count
   alarm_description        = "Status checks have failed for system, generating ticket."
@@ -448,7 +448,7 @@ module "status_check_failed_system_alarm_ticket" {
 }
 
 module "status_check_failed_instance_alarm_ticket" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm//?ref=v0.12.4"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm//?ref=v0.12.6"
 
   alarm_count              = var.az_count
   alarm_description        = "Status checks have failed for instance, generating ticket."
