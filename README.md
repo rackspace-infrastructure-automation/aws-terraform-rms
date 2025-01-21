@@ -1,3 +1,6 @@
+> [!CAUTION]
+> This project is end of life. This repo will be deleted on June 2nd 2025.
+
 # aws-terraform-rms
 
 This module deploys the required infrastructure for an RMS managed Alert Logic deployment.  This includes  
